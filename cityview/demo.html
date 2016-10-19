@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>demo</title>
+<link type="text/css" href="cityView.css"  rel="stylesheet"></link>
+<script src="jquery-1.7.1.js"></script>
+<script src="cityView.js"></script>
+<style type="text/css">
+
+html {
+    height: 100%;
+    width: 100%;
+}
+body {
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+}
+
+#main {
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.c-view {
+    bottom: 0;
+    left: 80px;
+    position: absolute;
+    right: 0;
+    top: 20px;
+}
+</style>
+<script type="text/javascript">
+$(function(){
+	initCitys();
+});
+function initCitys(){
+	doms = $("#dd");
+	doms.cityView({
+		atzClick  :function(para,cb){//A-Z切换显示
+			var id = para.id;
+			var gnw = para.GNW;
+			if(gnw=="0"){
+				gnw = 'CN';
+			}
+			var sqlwhere = "ZD.F_INITIAL = '"+id+"' AND ZD.F_CITY_TYPE ='3' AND ZD.F_COUNTRY = '"+gnw+"' AND (ZD.F_DISABLE IS NULL or ZD.F_DISABLE<>'1')";
+			if(id=="热门"||id=="Hot"){
+				sqlwhere = "ZD.F_COUNTRY = '"+gnw+"' AND (ZD.F_DISABLE IS NULL or ZD.F_DISABLE<>'1') AND ZD.F_HOTGRD>=100";
+			}
+			var cityarray = [];
+			var senddata1 = {
+			        "service" : "BIZDctService",
+			        "method":"queryDCTPageRowEx",
+			        "DCT_ID":"WD_CITY",
+			        "DCT_PARENT_ID":"#ROOT",
+			        "DCT_PARENT_LEVEL":"0",
+			        "SHOW_ALL_CHILDREN":"1",
+			    /*    "PAGE_ROW":"16",*/
+			        "SQL_FILTER_WHERE":sqlwhere
+			        };
+		   $.ajax({
+			        url:"commAction.do",
+			        data:{jsondata:JSON.stringify(senddata1)},
+			        type:"POST",
+			        dataType:"json",
+			        async:true,
+			        success:function(data){
+			        	var rows = data.DCT_ROWSET.ROWS;
+			        	$.each(rows,function(a,b){
+			        		cityarray.push(b['F_NAME']); 
+			        	});
+			        	cb(cityarray,rows);
+			}});
+		},
+		dzClick:function(para,cb){//大洲切换显示
+			var id = para.id;
+			var gnw = para.GNW;
+			if(gnw=="1"){
+				gnw = 'CN';
+			}
+			var sqlwhere = "ZD.F_AREA = '"+id+"' AND ZD.F_CITY_TYPE = '3' AND ZD.F_COUNTRY <> '"+gnw+"' AND (ZD.F_DISABLE IS NULL or ZD.F_DISABLE<>'1')";
+			if(id=="0"){
+				sqlwhere = "ZD.F_COUNTRY <> '"+gnw+"' AND ZD.F_CITY_TYPE = '3' AND (ZD.F_DISABLE IS NULL or ZD.F_DISABLE<>'1') AND ZD.F_HOTGRD>=100";
+			}
+			var cityarray = [];
+			var senddata1 = {
+			        "service" : "BIZDctService",
+			        "method":"queryDCTPageRowEx",
+			        "DCT_ID":"WD_CITY",
+			        "DCT_PARENT_ID":"#ROOT",
+			        "DCT_PARENT_LEVEL":"0",
+			        "SHOW_ALL_CHILDREN":"1",
+			    /*    "PAGE_ROW":"16",*/
+			        "SQL_FILTER_WHERE":sqlwhere
+			        };
+		   $.ajax({
+			        url:"commAction.do",
+			        data:{jsondata:JSON.stringify(senddata1)},
+			        type:"POST",
+			        dataType:"json",
+			        async:true,
+			        success:function(data){
+			        	var rows = data.DCT_ROWSET.ROWS;
+			        	$.each(rows,function(a,b){
+			        		cityarray.push(b['F_NAME']); 
+			        	});
+			        	cb(cityarray,rows);
+			}});
+		},
+        cityClick :function(para){//回填数据
+        	$("#"+id).val(para.name);
+        },
+        inputCall:function(para,cb){//直接输入数据查询
+        	var id = para.name;
+        	if(id==null){
+        		return;
+        	}
+        	var xid = id.toLocaleLowerCase();
+        	var did = id.toUpperCase();
+        	var cityarray = [];
+        	if(id==""){
+        		cb(cityarray);
+        	}
+        	var sqlwhere = "";
+        	if(ishidegw=="1"){
+        		sqlwhere = "ZD.F_COUNTRY = 'CN' AND (ZD.F_INITIAL = '"+xid+"' OR ZD.F_NAME LIKE '%"+xid+"%' OR ZD.F_FULLNAME LIKE '%"+xid+"%' OR ZD.F_PINYIN LIKE '%"+xid+"%' OR ZD.F_ACRONYM LIKE '%"+xid+"%' OR ZD.F_INITIAL = '"+did+"' OR ZD.F_NAME LIKE '%"+did+"%' OR ZD.F_FULLNAME LIKE '%"+did+"%' OR ZD.F_PINYIN LIKE '%"+did+"%' OR ZD.F_ACRONYM LIKE '%"+did+"%') AND (ZD.F_DISABLE IS NULL or ZD.F_DISABLE<>'1') AND ZD.F_CITY_TYPE<>'1' AND ZD.F_CITY_TYPE<>'2'";
+        	}else{
+        		sqlwhere = "(ZD.F_INITIAL = '"+xid+"' OR ZD.F_NAME LIKE '%"+xid+"%' OR ZD.F_FULLNAME LIKE '%"+xid+"%' OR ZD.F_PINYIN LIKE '%"+xid+"%' OR ZD.F_ACRONYM LIKE '%"+xid+"%' OR ZD.F_INITIAL = '"+did+"' OR ZD.F_NAME LIKE '%"+did+"%' OR ZD.F_FULLNAME LIKE '%"+did+"%' OR ZD.F_PINYIN LIKE '%"+did+"%' OR ZD.F_ACRONYM LIKE '%"+did+"%') AND (ZD.F_DISABLE IS NULL or ZD.F_DISABLE<>'1')";
+        	}
+            var senddata1 = {
+                    "service" : "BIZDctService",
+                    "method":"queryDCTPageRowEx",
+                    "DCT_ID":"WD_CITY",
+                    "DCT_PARENT_ID":"#ROOT",
+                    "DCT_PARENT_LEVEL":"0",
+                    "SHOW_ALL_CHILDREN":"1",
+                    "PAGE_ROW":"10",
+                    "DCT_ORDER_FIELD":"F_LEVEL",
+                    "SQL_FILTER_WHERE":sqlwhere
+                    };
+           $.ajax({
+                    url:"commAction.do",
+                    data:{jsondata:JSON.stringify(senddata1)},
+                    type:"POST",
+                    dataType:"json",
+                    async:true,
+                    success:function(data){
+                        var rows = data.DCT_ROWSET.ROWS;
+                        $.each(rows,function(a,b){
+                            cityarray.push(b['F_NAME']+"-"+b['F_FULLNAME']);
+                        });
+                        if(rows.length==0){
+                        	cityarray.push(JSCONFIG.FLOWCOMMON_TEXT46);
+//			                        	cityarray.push("不存在");
+                        	rows = [];
+                        }
+                        cb(cityarray,rows);
+            }}); 
+        },
+        zdyTL:function(para){//自定义显示位置
+        	var iddom = para.iddom;
+        	var top1 = iddom.parents("table").eq(0).parents("tr").position().top+iddom.parents("table").eq(0).parents("table").position().top+81+13;
+        	var top2 = iddom.parents("tr").eq(0).position().top-Math.abs(iddom.parents("table").eq(0).parent().position().top);
+        	var top = top1+top2+25; 
+        	var tl = $(this).offset();
+			var left = tl.left-4;
+			return {top:top,left:left};
+        }
+	});
+	doms.cityView("bindInput",{"id":"dd","iszdytl":false}); 
+}
+</script>
+</head>
+<body>
+<div id="main">
+	<div class="c-view">
+		<h3>城市选择</h3>
+		<input id="dd" type="text" class="input1"></input>
+	</div>
+</div>
+</body>
+</html>
